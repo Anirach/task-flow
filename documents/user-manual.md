@@ -14,7 +14,8 @@
 10. [Notifications](#10-notifications)
 11. [Settings](#11-settings)
 12. [Roles & Permissions](#12-roles--permissions)
-13. [Keyboard Shortcuts & Tips](#13-keyboard-shortcuts--tips)
+13. [Security](#13-security)
+14. [Keyboard Shortcuts & Tips](#14-keyboard-shortcuts--tips)
 
 ---
 
@@ -48,7 +49,7 @@ The sidebar can be collapsed by clicking the **X** button at the top to give mor
 2. Enter your **Password**
 3. Click **Sign in to TaskFlow**
 
-If the credentials are incorrect, an error message will appear in red above the form.
+If the credentials are incorrect, an error message will appear in red above the form. After 10 failed attempts within 15 minutes, you will be temporarily locked out to protect your account.
 
 ### Staying Logged In
 
@@ -366,20 +367,19 @@ Access Settings from the sidebar (gear icon at the bottom). The Settings page ha
 ### Profile
 
 - **Name** — Edit your display name
-- **Email** — Shown but cannot be changed
-- **Role** — Edit your role title (e.g., "Team Lead", "Designer")
+- **Email** — Shown but cannot be changed (read-only)
 
 Click **Save Profile** to save changes. A confirmation message appears briefly.
 
 ### Change Password
 
 1. Enter your **Current Password**
-2. Enter your **New Password** (minimum 6 characters)
+2. Enter your **New Password** (minimum 8 characters)
 3. Enter it again in **Confirm New Password**
 4. Click **Update Password**
 
 Validation checks:
-- New password must be at least 6 characters
+- New password must be at least 8 characters
 - New password and confirmation must match
 - Current password must be correct
 
@@ -434,7 +434,29 @@ Read-only access:
 
 ---
 
-## 13. Keyboard Shortcuts & Tips
+## 13. Security
+
+TaskFlow includes several security measures to protect your data:
+
+### Account Protection
+- **Rate limiting** — Login is limited to 10 attempts per 15 minutes. After exceeding this, you will be temporarily locked out. Registration is limited to 5 accounts per hour.
+- **Password requirements** — Passwords must be at least 8 characters long (max 128).
+- **Session expiry** — Your login session expires after 24 hours. You will need to log in again.
+
+### Data Protection
+- **Role-based access** — You can only see projects you are a member of. Actions are restricted based on your role (Admin/Member/Viewer).
+- **Input validation** — All input fields have length limits to prevent abuse (e.g., task titles max 500 chars, descriptions max 5000 chars, comments max 5000 chars).
+- **CORS protection** — The API only accepts requests from authorized origins.
+- **Security headers** — The server sets industry-standard security headers (HSTS, X-Frame-Options, X-Content-Type-Options) to protect against common web attacks.
+
+### Best Practices
+- Use a strong, unique password for your account
+- Log out when using shared computers
+- Report any suspicious activity to your project Admin
+
+---
+
+## 14. Keyboard Shortcuts & Tips
 
 ### General
 

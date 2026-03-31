@@ -14,10 +14,10 @@ export async function listComments(req: Request, res: Response, next: NextFuncti
 export async function createComment(req: Request, res: Response, next: NextFunction) {
   try {
     const { text } = req.body;
-    if (!text) {
-      throw new AppError(400, 'VALIDATION_ERROR', 'text is required');
+    if (!text || typeof text !== 'string' || text.trim().length === 0 || text.length > 5000) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'Comment text must be 1-5000 characters');
     }
-    const comment = await commentService.createComment(req.params.taskId, text, req.user!.id);
+    const comment = await commentService.createComment(req.params.taskId, text.trim(), req.user!.id);
     res.status(201).json(comment);
   } catch (err) {
     next(err);

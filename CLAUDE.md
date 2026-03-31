@@ -74,7 +74,7 @@ Start backend first (`cd server && npm run dev`), then frontend (`npm run dev`).
 - Models: User, Project, ProjectColumn, ProjectMember (with role), Task, Comment, Notification
 - Key indexes: `(projectId, status)` on Task, `(userId, createdAt)` on Notification
 
-**Authentication:** JWT (7-day expiry) + bcrypt (12 rounds). Token returned on login/register, stored in frontend localStorage.
+**Authentication:** JWT (24h expiry) + bcrypt (12 rounds). Token returned on login/register, stored in frontend localStorage. Minimum password length: 8 characters.
 
 **Role-Based Permissions:** Project-scoped roles via `ProjectMember.role` field:
 - **Admin** — Full access: CRUD project, manage members, add/reorder columns, delete any task
@@ -82,6 +82,17 @@ Start backend first (`cd server && npm run dev`), then frontend (`npm run dev`).
 - **Viewer** — Read-only. Cannot create tasks, comment, or modify anything.
 
 The `requireProjectRole()` middleware enforces these on the backend. Frontend conditionally hides UI elements based on `project.userRole`.
+
+**Security:**
+- Helmet.js sets security headers (X-Frame-Options, X-Content-Type-Options, HSTS, CSP, etc.)
+- CORS restricted to allowed origins (default: `http://localhost:3000`)
+- Rate limiting on auth endpoints (login: 10/15min, register: 5/hour, password change: 5/15min)
+- Request body size limit: 1MB
+- Input validation on all controllers (length limits, format checks, enum validation)
+- Mass assignment protection — users cannot set their own role on register/profile update
+- Avatar URL validation (only http/https allowed)
+- Error messages sanitized — no stack traces or internal details leak to frontend
+- Gzip compression on responses
 
 **API Endpoints (all prefixed `/api`):**
 - Auth: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `PATCH /auth/profile`, `PATCH /auth/password`

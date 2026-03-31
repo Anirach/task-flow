@@ -24,6 +24,7 @@ A full-stack project management application with Kanban boards, role-based permi
 | ORM | Prisma |
 | Database | SQLite |
 | Auth | JWT + bcrypt |
+| Security | Helmet, CORS, rate limiting, input validation |
 
 ## Getting Started
 
@@ -111,3 +112,16 @@ Each project member has a role:
 | Edit project settings | Yes | No | No |
 | Manage members & roles | Yes | No | No |
 | Delete project | Yes | No | No |
+
+## Security
+
+- **Helmet.js** — Security headers (X-Frame-Options, HSTS, X-Content-Type-Options, etc.)
+- **CORS** — Restricted to allowed origins only
+- **Rate Limiting** — Login: 10 attempts/15min, Register: 5/hour, Password change: 5/15min
+- **Input Validation** — Length limits, format checks, and enum validation on all endpoints
+- **Body Size Limit** — 1MB max JSON payload
+- **Mass Assignment Protection** — Users cannot escalate their own roles
+- **JWT** — 24-hour token expiry, bcrypt password hashing (12 rounds), min 8 char passwords
+- **Avatar URL Validation** — Only http/https URLs accepted
+- **Error Sanitization** — No internal details or stack traces leak to clients
+- **Gzip Compression** — Responses compressed for faster delivery

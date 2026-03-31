@@ -6,7 +6,7 @@ import { AppError } from '../middleware/errorHandler.js';
 import { invalidateUserCache } from '../middleware/auth.js';
 
 const SALT_ROUNDS = 12;
-const TOKEN_EXPIRY = '7d';
+const TOKEN_EXPIRY = '24h';
 
 function signToken(userId: string): string {
   return jwt.sign({ userId }, env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
@@ -20,13 +20,21 @@ const userSelect = {
   role: true,
 } as const;
 
+function validateAvatarUrl(url: string): boolean {
+  if (!url) return true;
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 export async function register(data: {
   name: string;
   email: string;
   password: string;
   avatar?: string;
-  role?: string;
 }) {
+  if (data.avatar && !validateAvatarUrl(data.avatar)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Avatar must be a valid HTTP(S) URL');
+  }
+
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
   if (existing) {
     throw new AppError(409, 'CONFLICT', 'Email already registered');
@@ -40,7 +48,7 @@ export async function register(data: {
       email: data.email,
       password: hashedPassword,
       avatar: data.avatar || '',
-      role: data.role || 'Member',
+      role: 'Member',
     },
     select: userSelect,
   });
@@ -74,10 +82,9 @@ export async function getMe(userId: string) {
   return user;
 }
 
-export async function updateProfile(userId: string, data: { name?: string; role?: string }) {
+export async function updateProfile(userId: string, data: { name?: string }) {
   const updateData: any = {};
   if (data.name !== undefined) updateData.name = data.name;
-  if (data.role !== undefined) updateData.role = data.role;
 
   const user = await prisma.user.update({
     where: { id: userId },
@@ -89,8 +96,8 @@ export async function updateProfile(userId: string, data: { name?: string; role?
 }
 
 export async function changePassword(userId: string, currentPassword: string, newPassword: string) {
-  if (newPassword.length < 6) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'New password must be at least 6 characters');
+  if (newPassword.length < 8) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'New password must be at least 8 characters');
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });

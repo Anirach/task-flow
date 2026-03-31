@@ -20,7 +20,7 @@ export const Login: React.FC = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password');
+      setError('Invalid email or password');
     } finally {
       setIsLoading(false);
     }
