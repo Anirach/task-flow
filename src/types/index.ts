@@ -9,6 +9,8 @@ export interface User {
   role: string;
 }
 
+export type ProjectRole = 'Admin' | 'Member' | 'Viewer';
+
 export interface Project {
   id: string;
   name: string;
@@ -19,6 +21,8 @@ export interface Project {
   createdAt: string;
   taskCount: number;
   completedCount: number;
+  userRole?: ProjectRole;
+  memberRoles?: Record<string, string>;
 }
 
 export interface Task {

@@ -3,12 +3,16 @@ import { AppError } from '../middleware/errorHandler.js';
 
 const DEFAULT_COLUMNS = ['To Do', 'In Progress', 'In Review', 'Done'];
 
-async function transformProject(project: any) {
+async function transformProject(project: any, currentUserId?: string) {
   const columns = (project.columns || [])
     .sort((a: any, b: any) => a.order - b.order)
     .map((c: any) => c.name);
 
   const memberIds = (project.members || []).map((m: any) => m.userId);
+  const memberRoles: Record<string, string> = {};
+  for (const m of project.members || []) {
+    memberRoles[m.userId] = m.role;
+  }
 
   const taskCount = project._count?.tasks ?? 0;
 
@@ -21,6 +25,13 @@ async function transformProject(project: any) {
     });
   }
 
+  // Find current user's role in this project
+  let userRole: string | undefined;
+  if (currentUserId) {
+    const membership = (project.members || []).find((m: any) => m.userId === currentUserId);
+    userRole = membership?.role;
+  }
+
   return {
     id: project.id,
     name: project.name,
@@ -31,30 +42,33 @@ async function transformProject(project: any) {
     createdAt: project.createdAt.toISOString(),
     taskCount,
     completedCount,
+    userRole,
+    memberRoles,
   };
 }
 
 const projectInclude = {
   columns: { orderBy: { order: 'asc' as const } },
-  members: { select: { userId: true } },
+  members: { select: { userId: true, role: true } },
   _count: { select: { tasks: true } },
 };
 
-export async function listProjects() {
+export async function listProjects(currentUserId: string) {
   const projects = await prisma.project.findMany({
+    where: { members: { some: { userId: currentUserId } } },
     include: projectInclude,
     orderBy: { createdAt: 'desc' },
   });
-  return Promise.all(projects.map(transformProject));
+  return Promise.all(projects.map((p) => transformProject(p, currentUserId)));
 }
 
-export async function getProject(id: string) {
+export async function getProject(id: string, currentUserId?: string) {
   const project = await prisma.project.findUnique({
     where: { id },
     include: projectInclude,
   });
   if (!project) throw new AppError(404, 'NOT_FOUND', 'Project not found');
-  return transformProject(project);
+  return transformProject(project, currentUserId);
 }
 
 export async function createProject(data: {
@@ -64,7 +78,7 @@ export async function createProject(data: {
   memberIds: string[];
 }, currentUserId: string) {
   // Ensure current user is included in members
-  const memberIds = Array.from(new Set([currentUserId, ...data.memberIds]));
+  const allMemberIds = Array.from(new Set([currentUserId, ...data.memberIds]));
 
   const project = await prisma.project.create({
     data: {
@@ -75,13 +89,16 @@ export async function createProject(data: {
         create: DEFAULT_COLUMNS.map((name, order) => ({ name, order })),
       },
       members: {
-        create: memberIds.map((userId) => ({ userId })),
+        create: allMemberIds.map((userId) => ({
+          userId,
+          role: userId === currentUserId ? 'Admin' : 'Member',
+        })),
       },
     },
     include: projectInclude,
   });
 
-  return transformProject(project);
+  return transformProject(project, currentUserId);
 }
 
 export async function updateProject(id: string, data: {
@@ -89,7 +106,8 @@ export async function updateProject(id: string, data: {
   color?: string;
   description?: string;
   memberIds?: string[];
-}) {
+  members?: { userId: string; role: string }[];
+}, currentUserId?: string) {
   const existing = await prisma.project.findUnique({
     where: { id },
     include: { members: true },
@@ -104,8 +122,33 @@ export async function updateProject(id: string, data: {
 
   await prisma.project.update({ where: { id }, data: updateData });
 
-  // Sync members if provided
-  if (data.memberIds) {
+  // Sync members with roles if full members array provided
+  if (data.members) {
+    const currentIds = existing.members.map((m) => m.userId);
+    const newIds = data.members.map((m) => m.userId);
+
+    const toRemove = currentIds.filter((uid) => !newIds.includes(uid));
+    const toAdd = data.members.filter((m) => !currentIds.includes(m.userId));
+    const toUpdate = data.members.filter((m) => currentIds.includes(m.userId));
+
+    if (toRemove.length > 0) {
+      await prisma.projectMember.deleteMany({
+        where: { projectId: id, userId: { in: toRemove } },
+      });
+    }
+    if (toAdd.length > 0) {
+      await prisma.projectMember.createMany({
+        data: toAdd.map((m) => ({ projectId: id, userId: m.userId, role: m.role || 'Member' })),
+      });
+    }
+    for (const m of toUpdate) {
+      await prisma.projectMember.updateMany({
+        where: { projectId: id, userId: m.userId },
+        data: { role: m.role },
+      });
+    }
+  } else if (data.memberIds) {
+    // Legacy format — preserve existing roles, new members get "Member"
     const currentIds = existing.members.map((m) => m.userId);
     const newIds = data.memberIds;
 
@@ -119,7 +162,7 @@ export async function updateProject(id: string, data: {
     }
     if (toAdd.length > 0) {
       await prisma.projectMember.createMany({
-        data: toAdd.map((userId) => ({ projectId: id, userId })),
+        data: toAdd.map((userId) => ({ projectId: id, userId, role: 'Member' })),
       });
     }
   }
@@ -129,7 +172,7 @@ export async function updateProject(id: string, data: {
     where: { id },
     include: projectInclude,
   });
-  return transformProject(updated!);
+  return transformProject(updated!, currentUserId);
 }
 
 export async function deleteProject(id: string) {
@@ -139,7 +182,7 @@ export async function deleteProject(id: string) {
   await prisma.project.delete({ where: { id } });
 }
 
-export async function addColumn(projectId: string, name: string) {
+export async function addColumn(projectId: string, name: string, currentUserId?: string) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: { columns: true },
@@ -157,17 +200,16 @@ export async function addColumn(projectId: string, name: string) {
     data: { name, order: maxOrder + 1, projectId },
   });
 
-  return getProject(projectId);
+  return getProject(projectId, currentUserId);
 }
 
-export async function reorderColumns(projectId: string, columns: string[]) {
+export async function reorderColumns(projectId: string, columns: string[], currentUserId?: string) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: { columns: true },
   });
   if (!project) throw new AppError(404, 'NOT_FOUND', 'Project not found');
 
-  // Update each column's order to match the array index
   await prisma.$transaction(
     columns.map((name, order) =>
       prisma.projectColumn.updateMany({
@@ -177,5 +219,5 @@ export async function reorderColumns(projectId: string, columns: string[]) {
     )
   );
 
-  return getProject(projectId);
+  return getProject(projectId, currentUserId);
 }

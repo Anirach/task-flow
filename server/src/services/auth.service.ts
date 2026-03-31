@@ -72,3 +72,33 @@ export async function getMe(userId: string) {
   }
   return user;
 }
+
+export async function updateProfile(userId: string, data: { name?: string; role?: string }) {
+  const updateData: any = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.role !== undefined) updateData.role = data.role;
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    select: userSelect,
+  });
+  return user;
+}
+
+export async function changePassword(userId: string, currentPassword: string, newPassword: string) {
+  if (newPassword.length < 6) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'New password must be at least 6 characters');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError(404, 'NOT_FOUND', 'User not found');
+
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Current password is incorrect');
+  }
+
+  const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({ where: { id: userId }, data: { password: hashed } });
+}

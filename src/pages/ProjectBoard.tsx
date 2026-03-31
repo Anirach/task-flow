@@ -51,6 +51,10 @@ export const ProjectBoard: React.FC = () => {
   const projectTasks = tasks.filter(t => t.projectId === id);
   const projectMembers = users.filter(u => project?.memberIds.includes(u.id));
 
+  const isAdmin = project?.userRole === 'Admin';
+  const isViewer = project?.userRole === 'Viewer';
+  const canEdit = !isViewer; // Admin or Member
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
@@ -169,12 +173,14 @@ export const ProjectBoard: React.FC = () => {
               {projectMembers.map(u => (
                 <Avatar key={u.id} src={u.avatar} name={u.name} size="sm" />
               ))}
-              <button 
-                onClick={() => setIsManageMembersModalOpen(true)}
-                className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-primary hover:bg-primary-light dark:hover:bg-primary/20 transition-colors"
-              >
-                <Plus size={16} />
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setIsManageMembersModalOpen(true)}
+                  className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-primary hover:bg-primary-light dark:hover:bg-primary/20 transition-colors"
+                >
+                  <Plus size={16} />
+                </button>
+              )}
             </div>
             <div className="h-8 w-px bg-border mx-1" />
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
@@ -192,14 +198,16 @@ export const ProjectBoard: React.FC = () => {
                 List
               </button>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-2"
-              onClick={() => setIsProjectSettingsModalOpen(true)}
-            >
-              <SettingsIcon size={18} />
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2"
+                onClick={() => setIsProjectSettingsModalOpen(true)}
+              >
+                <SettingsIcon size={18} />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -219,10 +227,12 @@ export const ProjectBoard: React.FC = () => {
             Filter
           </Button>
           <div className="flex-1" />
-          <Button size="sm" className="gap-2" onClick={() => handleAddTask(project.columns[0] || 'To Do')}>
-            <Plus size={16} />
-            Add Task
-          </Button>
+          {canEdit && (
+            <Button size="sm" className="gap-2" onClick={() => handleAddTask(project.columns[0] || 'To Do')}>
+              <Plus size={16} />
+              Add Task
+            </Button>
+          )}
         </div>
       </header>
 
@@ -247,7 +257,7 @@ export const ProjectBoard: React.FC = () => {
               ))}
             </SortableContext>
             
-            {isAddingColumn ? (
+            {isAdmin && (isAddingColumn ? (
               <div className="w-72 shrink-0 bg-surface border border-border rounded-xl p-4 h-fit shadow-sm">
                 <input
                   autoFocus
@@ -271,14 +281,14 @@ export const ProjectBoard: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={() => setIsAddingColumn(true)}
                 className="w-72 shrink-0 h-12 border-2 border-dashed border-border rounded-xl flex items-center justify-center gap-2 text-text-secondary hover:border-primary hover:text-primary transition-all text-sm font-bold bg-surface/50"
               >
                 <Plus size={18} />
                 Add Column
               </button>
-            )}
+            ))}
           </div>
 
           <DragOverlay dropAnimation={{
@@ -309,10 +319,11 @@ export const ProjectBoard: React.FC = () => {
         </DndContext>
       </div>
 
-      <TaskDetailPanel 
-        task={selectedTask} 
-        isOpen={!!selectedTask} 
-        onClose={() => setSelectedTask(null)} 
+      <TaskDetailPanel
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        projectRole={project.userRole}
       />
 
       <NewTaskModal 

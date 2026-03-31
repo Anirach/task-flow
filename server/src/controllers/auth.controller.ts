@@ -36,3 +36,25 @@ export async function getMe(req: Request, res: Response, next: NextFunction) {
     next(err);
   }
 }
+
+export async function updateProfile(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await authService.updateProfile(req.user!.id, req.body);
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function changePassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'currentPassword and newPassword are required');
+    }
+    await authService.changePassword(req.user!.id, currentPassword, newPassword);
+    res.json({ message: 'Password updated' });
+  } catch (err) {
+    next(err);
+  }
+}

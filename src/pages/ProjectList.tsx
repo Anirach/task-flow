@@ -21,6 +21,9 @@ export const ProjectList: React.FC = () => {
   const projectTasks = tasks.filter(t => t.projectId === id);
   const projectMembers = users.filter(u => project?.memberIds.includes(u.id));
 
+  const isViewer = project?.userRole === 'Viewer';
+  const canEdit = !isViewer;
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,6 +72,7 @@ export const ProjectList: React.FC = () => {
   });
 
   const startEditing = (taskId: string, field: string, value: any, e: React.MouseEvent) => {
+    if (!canEdit) return;
     e.stopPropagation();
     setEditingTaskId(taskId);
     setEditingField(field);
@@ -129,10 +133,12 @@ export const ProjectList: React.FC = () => {
                 List
               </button>
             </div>
-            <Button size="sm" className="gap-2" onClick={() => setIsNewTaskModalOpen(true)}>
-              <Plus size={16} />
-              Add Task
-            </Button>
+            {canEdit && (
+              <Button size="sm" className="gap-2" onClick={() => setIsNewTaskModalOpen(true)}>
+                <Plus size={16} />
+                Add Task
+              </Button>
+            )}
           </div>
         </div>
 
@@ -354,10 +360,11 @@ export const ProjectList: React.FC = () => {
         </div>
       </div>
 
-      <TaskDetailPanel 
-        task={selectedTask} 
-        isOpen={!!selectedTask} 
-        onClose={() => setSelectedTask(null)} 
+      <TaskDetailPanel
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        projectRole={project.userRole}
       />
 
       <NewTaskModal 

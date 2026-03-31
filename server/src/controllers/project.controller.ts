@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import * as projectService from '../services/project.service.js';
 import { AppError } from '../middleware/errorHandler.js';
 
-export async function listProjects(_req: Request, res: Response, next: NextFunction) {
+export async function listProjects(req: Request, res: Response, next: NextFunction) {
   try {
-    const projects = await projectService.listProjects();
+    const projects = await projectService.listProjects(req.user!.id);
     res.json(projects);
   } catch (err) {
     next(err);
@@ -13,7 +13,7 @@ export async function listProjects(_req: Request, res: Response, next: NextFunct
 
 export async function getProject(req: Request, res: Response, next: NextFunction) {
   try {
-    const project = await projectService.getProject(req.params.id);
+    const project = await projectService.getProject(req.params.id, req.user!.id);
     res.json(project);
   } catch (err) {
     next(err);
@@ -38,7 +38,7 @@ export async function createProject(req: Request, res: Response, next: NextFunct
 
 export async function updateProject(req: Request, res: Response, next: NextFunction) {
   try {
-    const project = await projectService.updateProject(req.params.id, req.body);
+    const project = await projectService.updateProject(req.params.id, req.body, req.user!.id);
     res.json(project);
   } catch (err) {
     next(err);
@@ -60,7 +60,7 @@ export async function addColumn(req: Request, res: Response, next: NextFunction)
     if (!name) {
       throw new AppError(400, 'VALIDATION_ERROR', 'column name is required');
     }
-    const project = await projectService.addColumn(req.params.id, name);
+    const project = await projectService.addColumn(req.params.id, name, req.user!.id);
     res.status(201).json(project);
   } catch (err) {
     next(err);
@@ -73,7 +73,7 @@ export async function reorderColumns(req: Request, res: Response, next: NextFunc
     if (!Array.isArray(columns)) {
       throw new AppError(400, 'VALIDATION_ERROR', 'columns must be an array of strings');
     }
-    const project = await projectService.reorderColumns(req.params.id, columns);
+    const project = await projectService.reorderColumns(req.params.id, columns, req.user!.id);
     res.json(project);
   } catch (err) {
     next(err);

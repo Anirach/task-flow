@@ -13,11 +13,12 @@ interface TaskDetailPanelProps {
   task: Task | null;
   isOpen: boolean;
   onClose: () => void;
+  projectRole?: string;
 }
 
 import { useShallow } from 'zustand/react/shallow';
 
-export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, onClose }) => {
+export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, onClose, projectRole }) => {
   const { users, comments, addComment, deleteTask, updateTask, fetchComments, projects, currentUser } = useTaskStore(useShallow(state => ({
     users: state.users,
     comments: state.comments,
@@ -43,6 +44,10 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, 
   const reporter = users.find((u) => u.id === task.reporterId);
   const project = projects.find((p) => p.id === task.projectId);
   const taskComments = comments.filter((c) => c.taskId === task.id);
+
+  const role = projectRole || project?.userRole;
+  const isViewer = role === 'Viewer';
+  const canDelete = role === 'Admin' || (role === 'Member' && task.reporterId === currentUser.id);
 
   const handleAddComment = () => {
     if (commentText.trim()) {
@@ -141,29 +146,31 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, 
               )}
             </div>
 
-            <div className="flex gap-3 items-start">
-              <Avatar src={currentUser.avatar} name={currentUser.name} size="sm" />
-              <div className="flex-1 space-y-2">
-                <textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full bg-white dark:bg-slate-800 border border-border rounded-lg p-3 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none h-24 text-text-primary"
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-text-secondary">{commentText.length}/1000 characters</span>
-                  <Button 
-                    size="sm" 
-                    onClick={handleAddComment} 
-                    disabled={!commentText.trim()}
-                    className="gap-2"
-                  >
-                    <Send size={14} />
-                    Post Comment
-                  </Button>
+            {!isViewer && (
+              <div className="flex gap-3 items-start">
+                <Avatar src={currentUser.avatar} name={currentUser.name} size="sm" />
+                <div className="flex-1 space-y-2">
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="w-full bg-white dark:bg-slate-800 border border-border rounded-lg p-3 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none h-24 text-text-primary"
+                  />
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-text-secondary">{commentText.length}/1000 characters</span>
+                    <Button
+                      size="sm"
+                      onClick={handleAddComment}
+                      disabled={!commentText.trim()}
+                      className="gap-2"
+                    >
+                      <Send size={14} />
+                      Post Comment
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </section>
         </div>
 
@@ -171,10 +178,12 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, 
           <div className="text-[10px] text-text-secondary">
             Created on {format(new Date(task.createdAt), 'MMM d, yyyy')}
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setIsDeleting(true)} className="text-priority-high hover:bg-red-50 dark:hover:bg-red-900/20 gap-2">
-            <Trash2 size={16} />
-            Delete Task
-          </Button>
+          {canDelete && (
+            <Button variant="ghost" size="sm" onClick={() => setIsDeleting(true)} className="text-priority-high hover:bg-red-50 dark:hover:bg-red-900/20 gap-2">
+              <Trash2 size={16} />
+              Delete Task
+            </Button>
+          )}
 
           {isDeleting && (
             <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm flex items-center justify-between px-6 z-10">

@@ -52,6 +52,10 @@ export const auth = {
       body: JSON.stringify(data),
     }),
   me: () => request<any>('/auth/me'),
+  updateProfile: (data: { name?: string; role?: string }) =>
+    request<any>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    request<{ message: string }>('/auth/password', { method: 'PATCH', body: JSON.stringify(data) }),
 };
 
 // Users

@@ -47,7 +47,7 @@ async function main() {
           create: columns.map((name, order) => ({ name, order })),
         },
         members: {
-          create: memberIds.map((userId) => ({ userId })),
+          create: memberIds.map((userId, i) => ({ userId, role: i === 0 ? 'Admin' : 'Member' })),
         },
       },
     });

@@ -26,6 +26,7 @@ interface TaskState {
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   moveTask: (taskId: string, newStatus: Status) => Promise<void>;
+  updateProfile: (data: { name?: string; role?: string }) => Promise<void>;
   fetchComments: (taskId: string) => Promise<void>;
   addComment: (taskId: string, text: string) => Promise<void>;
   markNotificationAsRead: (id: string) => Promise<void>;
@@ -220,6 +221,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         ),
       }));
     }
+  },
+
+  updateProfile: async (data) => {
+    const updated = await api.auth.updateProfile(data);
+    set({ currentUser: updated });
   },
 
   fetchComments: async (taskId) => {

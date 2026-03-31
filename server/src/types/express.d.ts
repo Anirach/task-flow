@@ -7,5 +7,6 @@ declare namespace Express {
       avatar: string;
       role: string;
     };
+    projectRole?: string;
   }
 }

@@ -8,6 +8,7 @@ import { ProjectBoard } from './pages/ProjectBoard';
 import { ProjectList } from './pages/ProjectList';
 import { MyTasks } from './pages/MyTasks';
 import { SearchPage } from './pages/SearchPage';
+import { Settings } from './pages/Settings';
 import { useTaskStore } from './store/useTaskStore';
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/projects/:id/board" element={<ProjectBoard />} />
           <Route path="/projects/:id/list" element={<ProjectList />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Fallback */}

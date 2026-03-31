@@ -103,10 +103,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, o
       </nav>
 
       <div className="p-3 border-t border-border">
-        <div className={cn('flex items-center gap-3 p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer', isCollapsed && 'justify-center')}>
-          <Settings size={20} className="text-text-secondary" />
-          {!isCollapsed && <span className="text-text-secondary text-sm">Settings</span>}
-        </div>
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 p-2 rounded-md transition-colors',
+              isActive ? 'bg-primary-light dark:bg-primary/20 text-primary font-semibold' : 'text-text-secondary hover:bg-slate-50 dark:hover:bg-slate-800',
+              isCollapsed && 'justify-center'
+            )
+          }
+        >
+          <Settings size={20} />
+          {!isCollapsed && <span className="text-sm">Settings</span>}
+        </NavLink>
         <div className={cn('flex items-center gap-3 p-2 mt-1 rounded-md group hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer', isCollapsed && 'justify-center')}>
           <img src={currentUser.avatar} alt={currentUser.name} className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
           {!isCollapsed && (
