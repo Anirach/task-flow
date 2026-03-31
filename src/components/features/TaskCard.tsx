@@ -14,7 +14,7 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
-  const { users } = useTaskStore();
+  const users = useTaskStore(state => state.users);
   const assignee = users.find((u) => u.id === task.assigneeId);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({

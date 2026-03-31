@@ -16,7 +16,8 @@ export const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
   onClose, 
   project 
 }) => {
-  const { updateProject, deleteProject } = useTaskStore();
+  const updateProject = useTaskStore(state => state.updateProject);
+  const deleteProject = useTaskStore(state => state.deleteProject);
   const [name, setName] = useState(project.name);
   const [color, setColor] = useState(project.color);
   const [description, setDescription] = useState(project.description);
@@ -44,10 +45,8 @@ export const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this project? All tasks will be permanently removed.')) {
-      deleteProject(project.id);
-      onClose();
-    }
+    deleteProject(project.id);
+    onClose();
   };
 
   const colors = [

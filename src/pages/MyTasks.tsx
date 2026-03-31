@@ -8,21 +8,34 @@ import { Task } from '../types';
 import { format } from 'date-fns';
 import { cn } from '../utils/cn';
 
+import { useShallow } from 'zustand/react/shallow';
+
 export const MyTasks: React.FC = () => {
-  const { tasks, projects, currentUser } = useTaskStore();
+  const { tasks, projects, currentUser } = useTaskStore(useShallow(state => ({
+    tasks: state.tasks,
+    projects: state.projects,
+    currentUser: state.currentUser
+  })));
   const myTasks = tasks.filter(t => t.assigneeId === currentUser.id);
   
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<'All' | 'Today' | 'Overdue'>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
   const filteredTasks = myTasks.filter(t => {
     const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filter === 'Today' 
-      ? t.dueDate === format(new Date(), 'yyyy-MM-dd')
-      : filter === 'Overdue'
-      ? t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'Done'
-      : true;
+    
+    let matchesFilter = true;
+    if (filter === 'Today') {
+      matchesFilter = t.dueDate === todayStr;
+    } else if (filter === 'Overdue') {
+      const project = projects.find(p => p.id === t.projectId);
+      const doneStatus = project?.columns[project.columns.length - 1] || 'Done';
+      matchesFilter = !!(t.dueDate && t.dueDate < todayStr && t.status !== doneStatus);
+    }
+    
     return matchesSearch && matchesFilter;
   });
 
@@ -38,7 +51,7 @@ export const MyTasks: React.FC = () => {
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-primary-dark mb-2">My Tasks</h1>
+        <h1 className="text-3xl font-bold text-primary-dark dark:text-primary-light mb-2">My Tasks</h1>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex gap-2">
             {(['All', 'Today', 'Overdue'] as const).map((f) => (
@@ -49,7 +62,7 @@ export const MyTasks: React.FC = () => {
                   'px-4 py-1.5 rounded-full text-xs font-bold transition-all',
                   filter === f 
                     ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                    : 'bg-white text-text-secondary border border-border hover:bg-slate-50'
+                    : 'bg-surface text-text-secondary border border-border hover:bg-slate-50 dark:hover:bg-slate-800'
                 )}
               >
                 {f}
@@ -64,12 +77,18 @@ export const MyTasks: React.FC = () => {
                 placeholder="Search my tasks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-border rounded-lg py-1.5 pl-9 pr-4 text-xs outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                className="w-full bg-surface border border-border rounded-lg py-1.5 pl-9 pr-4 text-xs outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all text-text-primary"
               />
             </div>
             <div className="flex items-center gap-2 text-text-secondary text-sm font-medium shrink-0">
               <CheckCircle2 size={16} className="text-green-500" />
-              <span>{myTasks.filter(t => t.status === 'Done').length} Completed</span>
+              <span className="dark:text-slate-400">
+                {myTasks.filter(t => {
+                  const project = projects.find(p => p.id === t.projectId);
+                  const doneStatus = project?.columns[project.columns.length - 1] || 'Done';
+                  return t.status === doneStatus;
+                }).length} Completed
+              </span>
             </div>
           </div>
         </div>
@@ -91,7 +110,7 @@ export const MyTasks: React.FC = () => {
                   <div 
                     key={task.id} 
                     onClick={() => setSelectedTask(task)}
-                    className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+                    className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
@@ -104,7 +123,11 @@ export const MyTasks: React.FC = () => {
                           <span>{task.status}</span>
                         </div>
                         {task.dueDate && (
-                          <div className={cn("flex items-center gap-1", new Date(task.dueDate) < new Date() && task.status !== 'Done' ? "text-priority-high font-bold" : "")}>
+                          <div className={cn("flex items-center gap-1", (() => {
+                            const project = projects.find(p => p.id === task.projectId);
+                            const doneStatus = project?.columns[project.columns.length - 1] || 'Done';
+                            return task.dueDate < todayStr && task.status !== doneStatus;
+                          })() ? "text-priority-high font-bold" : "")}>
                             <Calendar size={12} />
                             <span>{format(new Date(task.dueDate), 'MMM d')}</span>
                           </div>
@@ -130,11 +153,11 @@ export const MyTasks: React.FC = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-6">
+          <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-6">
             <CheckCircle2 size={48} />
           </div>
-          <h2 className="text-xl font-bold text-primary-dark mb-2">You're all caught up!</h2>
-          <p className="text-text-secondary max-w-xs">No tasks found for the current filter. Enjoy your productive day!</p>
+          <h2 className="text-xl font-bold text-primary-dark dark:text-primary-light mb-2">You're all caught up!</h2>
+          <p className="text-text-secondary dark:text-slate-400 max-w-xs">No tasks found for the current filter. Enjoy your productive day!</p>
         </div>
       )}
 

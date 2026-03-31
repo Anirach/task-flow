@@ -6,15 +6,29 @@ import { ProjectCard } from '../components/features/ProjectCard';
 import { Button } from '../components/ui/Button';
 import { format } from 'date-fns';
 
+import { useShallow } from 'zustand/react/shallow';
+
 export const Dashboard: React.FC = () => {
-  const { projects, tasks, currentUser } = useTaskStore();
+  const { projects, tasks, currentUser } = useTaskStore(useShallow(state => ({
+    projects: state.projects,
+    tasks: state.tasks,
+    currentUser: state.currentUser
+  })));
   const { onNewProject } = useOutletContext<{ onNewProject: () => void }>();
 
   const stats = [
     { label: 'Total Tasks', value: tasks.length, icon: <TrendingUp size={20} />, color: 'text-primary', bg: 'bg-primary-light dark:bg-primary/20' },
     { label: 'Due Today', value: tasks.filter(t => t.dueDate === format(new Date(), 'yyyy-MM-dd')).length, icon: <Clock size={20} />, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
-    { label: 'Overdue', value: tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'Done').length, icon: <AlertCircle size={20} />, color: 'text-priority-high dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-    { label: 'Completed', value: tasks.filter(t => t.status === 'Done').length, icon: <CheckCircle2 size={20} />, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
+    { label: 'Overdue', value: tasks.filter(t => {
+      const project = projects.find(p => p.id === t.projectId);
+      const doneStatus = project?.columns[project.columns.length - 1] || 'Done';
+      return t.dueDate && new Date(t.dueDate) < new Date() && t.status !== doneStatus;
+    }).length, icon: <AlertCircle size={20} />, color: 'text-priority-high dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+    { label: 'Completed', value: tasks.filter(t => {
+      const project = projects.find(p => p.id === t.projectId);
+      const doneStatus = project?.columns[project.columns.length - 1] || 'Done';
+      return t.status === doneStatus;
+    }).length, icon: <CheckCircle2 size={20} />, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
   ];
 
   return (

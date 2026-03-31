@@ -11,22 +11,39 @@ interface NewTaskModalProps {
   initialProjectId?: string;
 }
 
+import { useShallow } from 'zustand/react/shallow';
+
 export const NewTaskModal: React.FC<NewTaskModalProps> = ({ 
   isOpen, 
   onClose, 
   initialStatus = 'To Do',
   initialProjectId = ''
 }) => {
-  const { projects, users, addTask, currentUser } = useTaskStore();
+  const { projects, users, addTask, currentUser } = useTaskStore(useShallow(state => ({
+    projects: state.projects,
+    users: state.users,
+    addTask: state.addTask,
+    currentUser: state.currentUser
+  })));
   
   const [title, setTitle] = useState('');
   const [projectId, setProjectId] = useState(initialProjectId || (projects[0]?.id || ''));
-  const [status, setStatus] = useState<Status>(initialStatus);
+  
+  const selectedProject = projects.find(p => p.id === projectId);
+  
+  const [status, setStatus] = useState<Status>(initialStatus || (selectedProject?.columns[0] || 'To Do'));
   const [priority, setPriority] = useState<Priority>('Medium');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [dueDate, setDueDate] = useState('');
   const [description, setDescription] = useState('');
   const [labels, setLabels] = useState('');
+
+  // Update status if project changes and current status is not in new project
+  React.useEffect(() => {
+    if (selectedProject && !selectedProject.columns.includes(status)) {
+      setStatus(selectedProject.columns[0]);
+    }
+  }, [selectedProject?.id, selectedProject?.columns, status]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +67,6 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
     setLabels('');
     onClose();
   };
-
-  const selectedProject = projects.find(p => p.id === projectId);
 
   return (
     <Modal 

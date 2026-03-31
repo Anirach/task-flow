@@ -3,14 +3,23 @@ import { Link } from 'react-router-dom';
 import { Users, CheckCircle2 } from 'lucide-react';
 import { Project } from '../../types';
 import { ProgressBar } from '../ui/ProgressBar';
+import { useTaskStore } from '../../store/useTaskStore';
+
+import { useShallow } from 'zustand/react/shallow';
 
 interface ProjectCardProps {
   project: Project;
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
-  const progress = project.taskCount > 0 
-    ? Math.round((project.completedCount / project.taskCount) * 100) 
+  const tasks = useTaskStore(useShallow(state => state.tasks.filter(t => t.projectId === project.id)));
+  const doneStatus = project.columns[project.columns.length - 1];
+  
+  const taskCount = tasks.length;
+  const completedCount = tasks.filter(t => t.status === doneStatus).length;
+
+  const progress = taskCount > 0 
+    ? Math.round((completedCount / taskCount) * 100) 
     : 0;
 
   return (
@@ -24,7 +33,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </div>
         <div className="flex items-center gap-1 text-text-secondary text-xs font-medium">
           <CheckCircle2 size={14} className="text-green-500" />
-          <span>{project.completedCount}/{project.taskCount} Tasks</span>
+          <span>{completedCount}/{taskCount} Tasks</span>
         </div>
       </div>
 

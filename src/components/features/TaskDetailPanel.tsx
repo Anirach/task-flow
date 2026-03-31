@@ -15,9 +15,20 @@ interface TaskDetailPanelProps {
   onClose: () => void;
 }
 
+import { useShallow } from 'zustand/react/shallow';
+
 export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, onClose }) => {
-  const { users, comments, addComment, deleteTask, updateTask, projects, currentUser } = useTaskStore();
+  const { users, comments, addComment, deleteTask, updateTask, projects, currentUser } = useTaskStore(useShallow(state => ({
+    users: state.users,
+    comments: state.comments,
+    addComment: state.addComment,
+    deleteTask: state.deleteTask,
+    updateTask: state.updateTask,
+    projects: state.projects,
+    currentUser: state.currentUser
+  })));
   const [commentText, setCommentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!task) return null;
 
@@ -34,10 +45,8 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, 
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      deleteTask(task.id);
-      onClose();
-    }
+    deleteTask(task.id);
+    onClose();
   };
 
   return (
@@ -151,14 +160,24 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, 
           </section>
         </div>
 
-        <div className="mt-auto p-6 border-t border-border bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+        <div className="mt-auto p-6 border-t border-border bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center relative">
           <div className="text-[10px] text-text-secondary">
             Created on {format(new Date(task.createdAt), 'MMM d, yyyy')}
           </div>
-          <Button variant="ghost" size="sm" onClick={handleDelete} className="text-priority-high hover:bg-red-50 dark:hover:bg-red-900/20 gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setIsDeleting(true)} className="text-priority-high hover:bg-red-50 dark:hover:bg-red-900/20 gap-2">
             <Trash2 size={16} />
             Delete Task
           </Button>
+
+          {isDeleting && (
+            <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm flex items-center justify-between px-6 z-10">
+              <span className="text-sm font-bold text-primary-dark dark:text-primary-light">Delete this task?</span>
+              <div className="flex gap-2">
+                <Button size="xs" variant="ghost" onClick={() => setIsDeleting(false)}>Cancel</Button>
+                <Button size="xs" className="bg-priority-high hover:bg-red-700" onClick={handleDelete}>Delete</Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </SlidePanel>

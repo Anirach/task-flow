@@ -17,7 +17,8 @@ export const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
   onClose, 
   project 
 }) => {
-  const { users, updateProject } = useTaskStore();
+  const users = useTaskStore(state => state.users);
+  const updateProject = useTaskStore(state => state.updateProject);
   const [searchQuery, setSearchQuery] = useState('');
 
   const projectMembers = users.filter(u => project.memberIds.includes(u.id));

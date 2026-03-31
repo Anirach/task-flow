@@ -9,8 +9,8 @@ export const mockProjects: Project[] = [
     "memberIds": ["user-001", "user-002", "user-003"],
     "columns": ["To Do", "In Progress", "In Review", "Done"],
     "createdAt": "2025-02-01T09:00:00Z",
-    "taskCount": 24,
-    "completedCount": 9
+    "taskCount": 2,
+    "completedCount": 0
   },
   {
     "id": "proj-002",
@@ -20,8 +20,8 @@ export const mockProjects: Project[] = [
     "memberIds": ["user-001", "user-004", "user-005"],
     "columns": ["To Do", "In Progress", "In Review", "Done"],
     "createdAt": "2025-01-15T08:00:00Z",
-    "taskCount": 18,
-    "completedCount": 14
+    "taskCount": 2,
+    "completedCount": 1
   },
   {
     "id": "proj-003",
@@ -31,8 +31,8 @@ export const mockProjects: Project[] = [
     "memberIds": ["user-002", "user-003"],
     "columns": ["To Do", "In Progress", "In Review", "Done"],
     "createdAt": "2025-03-01T10:00:00Z",
-    "taskCount": 11,
-    "completedCount": 3
+    "taskCount": 1,
+    "completedCount": 0
   }
 ];
 
@@ -98,9 +98,9 @@ export const mockTasks: Task[] = [
     "description": "Hamburger menu does not open on iOS Safari.",
     "status": "To Do",
     "priority": "High",
-    "assigneeId": "user-003",
-    "reporterId": "user-001",
-    "dueDate": "2025-04-10",
+    "assigneeId": "user-001",
+    "reporterId": "user-002",
+    "dueDate": "2026-03-31",
     "labels": ["bug", "mobile"],
     "commentCount": 1,
     "attachmentCount": 0,
@@ -146,9 +146,9 @@ export const mockTasks: Task[] = [
     "description": "Plan LinkedIn, Instagram, and Twitter content calendar.",
     "status": "To Do",
     "priority": "Medium",
-    "assigneeId": "user-003",
+    "assigneeId": "user-001",
     "reporterId": "user-002",
-    "dueDate": "2025-04-20",
+    "dueDate": "2026-04-05",
     "labels": ["social", "content"],
     "commentCount": 0,
     "attachmentCount": 0,

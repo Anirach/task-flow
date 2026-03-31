@@ -33,10 +33,19 @@ import { Avatar } from '../components/ui/Avatar';
 import { Status, Task } from '../types';
 import { cn } from '../utils/cn';
 
+import { useShallow } from 'zustand/react/shallow';
+
 export const ProjectBoard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { projects, tasks, users, moveTask, addColumn, reorderColumns } = useTaskStore();
+  const { projects, tasks, users, moveTask, addColumn, reorderColumns } = useTaskStore(useShallow(state => ({
+    projects: state.projects,
+    tasks: state.tasks,
+    users: state.users,
+    moveTask: state.moveTask,
+    addColumn: state.addColumn,
+    reorderColumns: state.reorderColumns
+  })));
   
   const project = projects.find(p => p.id === id);
   const projectTasks = tasks.filter(t => t.projectId === id);
@@ -210,7 +219,7 @@ export const ProjectBoard: React.FC = () => {
             Filter
           </Button>
           <div className="flex-1" />
-          <Button size="sm" className="gap-2" onClick={() => handleAddTask('To Do')}>
+          <Button size="sm" className="gap-2" onClick={() => handleAddTask(project.columns[0] || 'To Do')}>
             <Plus size={16} />
             Add Task
           </Button>
