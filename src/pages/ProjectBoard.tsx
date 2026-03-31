@@ -32,6 +32,7 @@ import { Button } from '../components/ui/Button';
 import { Avatar } from '../components/ui/Avatar';
 import { Status, Task } from '../types';
 import { cn } from '../utils/cn';
+import { useDebounce } from '../hooks/useDebounce';
 
 import { useShallow } from 'zustand/react/shallow';
 
@@ -130,8 +131,9 @@ export const ProjectBoard: React.FC = () => {
     );
   }
 
-  const filteredTasks = projectTasks.filter(t => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const debouncedSearch = useDebounce(searchQuery);
+  const filteredTasks = projectTasks.filter(t =>
+    t.title.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   const handleAddTask = (status: Status) => {

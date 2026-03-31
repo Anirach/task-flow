@@ -11,7 +11,7 @@ interface ProjectCardProps {
   project: Project;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+export const ProjectCard: React.FC<ProjectCardProps> = React.memo(({ project }) => {
   const tasks = useTaskStore(useShallow(state => state.tasks.filter(t => t.projectId === project.id)));
   const doneStatus = project.columns[project.columns.length - 1];
   
@@ -75,4 +75,4 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       </div>
     </Link>
   );
-};
+});

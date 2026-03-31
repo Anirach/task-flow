@@ -3,7 +3,7 @@ import { AppError } from '../middleware/errorHandler.js';
 
 const DEFAULT_COLUMNS = ['To Do', 'In Progress', 'In Review', 'Done'];
 
-async function transformProject(project: any, currentUserId?: string) {
+function transformProject(project: any, currentUserId?: string, completedCountOverride?: number) {
   const columns = (project.columns || [])
     .sort((a: any, b: any) => a.order - b.order)
     .map((c: any) => c.name);
@@ -15,17 +15,8 @@ async function transformProject(project: any, currentUserId?: string) {
   }
 
   const taskCount = project._count?.tasks ?? 0;
+  const completedCount = completedCountOverride ?? 0;
 
-  // Compute completedCount: tasks whose status matches last column
-  const doneStatus = columns[columns.length - 1];
-  let completedCount = 0;
-  if (doneStatus && taskCount > 0) {
-    completedCount = await prisma.task.count({
-      where: { projectId: project.id, status: doneStatus },
-    });
-  }
-
-  // Find current user's role in this project
   let userRole: string | undefined;
   if (currentUserId) {
     const membership = (project.members || []).find((m: any) => m.userId === currentUserId);
@@ -47,6 +38,35 @@ async function transformProject(project: any, currentUserId?: string) {
   };
 }
 
+/** Batch-compute completedCount for multiple projects in a single query */
+async function batchCompletedCounts(projects: any[]): Promise<Map<string, number>> {
+  const doneConditions: { projectId: string; doneStatus: string }[] = [];
+  for (const p of projects) {
+    const cols = (p.columns || []).sort((a: any, b: any) => a.order - b.order);
+    const lastCol = cols[cols.length - 1];
+    if (lastCol && (p._count?.tasks ?? 0) > 0) {
+      doneConditions.push({ projectId: p.id, doneStatus: lastCol.name });
+    }
+  }
+
+  if (doneConditions.length === 0) return new Map();
+
+  // Single query: count tasks per project where status matches done column
+  const counts = await prisma.task.groupBy({
+    by: ['projectId'],
+    where: {
+      OR: doneConditions.map((c) => ({ projectId: c.projectId, status: c.doneStatus })),
+    },
+    _count: true,
+  });
+
+  const map = new Map<string, number>();
+  for (const row of counts) {
+    map.set(row.projectId, row._count);
+  }
+  return map;
+}
+
 const projectInclude = {
   columns: { orderBy: { order: 'asc' as const } },
   members: { select: { userId: true, role: true } },
@@ -59,7 +79,8 @@ export async function listProjects(currentUserId: string) {
     include: projectInclude,
     orderBy: { createdAt: 'desc' },
   });
-  return Promise.all(projects.map((p) => transformProject(p, currentUserId)));
+  const completedMap = await batchCompletedCounts(projects);
+  return projects.map((p) => transformProject(p, currentUserId, completedMap.get(p.id) ?? 0));
 }
 
 export async function getProject(id: string, currentUserId?: string) {
@@ -68,7 +89,8 @@ export async function getProject(id: string, currentUserId?: string) {
     include: projectInclude,
   });
   if (!project) throw new AppError(404, 'NOT_FOUND', 'Project not found');
-  return transformProject(project, currentUserId);
+  const completedMap = await batchCompletedCounts([project]);
+  return transformProject(project, currentUserId, completedMap.get(id) ?? 0);
 }
 
 export async function createProject(data: {

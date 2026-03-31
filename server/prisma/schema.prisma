@@ -85,8 +85,10 @@ model Task {
   updatedAt DateTime @updatedAt
 
   @@index([projectId])
+  @@index([projectId, status])
   @@index([assigneeId])
   @@index([status])
+  @@index([dueDate])
 }
 
 model Comment {
@@ -115,4 +117,5 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+  @@index([userId, createdAt])
 }

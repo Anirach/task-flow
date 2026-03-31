@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { NewProjectModal } from '../features/NewProjectModal';
 import { NotificationPanel } from '../features/NotificationPanel';
+import { ErrorBoundary } from '../ErrorBoundary';
 import { useThemeStore } from '../../store/useThemeStore';
 
 export const Layout: React.FC = () => {
@@ -31,7 +32,9 @@ export const Layout: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar onOpenNotifications={() => setIsNotificationPanelOpen(true)} />
         <main className="flex-1 overflow-y-auto">
-          <Outlet context={{ onNewProject: () => setIsNewProjectModalOpen(true) }} />
+          <ErrorBoundary>
+            <Outlet context={{ onNewProject: () => setIsNewProjectModalOpen(true) }} />
+          </ErrorBoundary>
         </main>
       </div>
 

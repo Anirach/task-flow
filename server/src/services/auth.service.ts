@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
 import { env } from '../config/env.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { invalidateUserCache } from '../middleware/auth.js';
 
 const SALT_ROUNDS = 12;
 const TOKEN_EXPIRY = '7d';
@@ -83,6 +84,7 @@ export async function updateProfile(userId: string, data: { name?: string; role?
     data: updateData,
     select: userSelect,
   });
+  invalidateUserCache(userId);
   return user;
 }
 

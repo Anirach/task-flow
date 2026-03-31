@@ -11,6 +11,7 @@ import { Task, Status, Priority } from '../types';
 import { format } from 'date-fns';
 import { cn } from '../utils/cn';
 import { Check, X } from 'lucide-react';
+import { useDebounce } from '../hooks/useDebounce';
 
 export const ProjectList: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,8 +47,9 @@ export const ProjectList: React.FC = () => {
     }
   };
 
-  const filteredTasks = projectTasks.filter(t => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const debouncedSearch = useDebounce(searchQuery);
+  const filteredTasks = projectTasks.filter(t =>
+    t.title.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   const sortedTasks = [...filteredTasks].sort((a, b) => {

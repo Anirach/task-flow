@@ -13,7 +13,7 @@ interface TaskCardProps {
   onClick: () => void;
 }
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
+export const TaskCard: React.FC<TaskCardProps> = React.memo(({ task, onClick }) => {
   const users = useTaskStore(state => state.users);
   const assignee = users.find((u) => u.id === task.assigneeId);
 
@@ -98,4 +98,4 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
       </div>
     </div>
   );
-};
+});

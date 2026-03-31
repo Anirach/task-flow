@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Plus, TrendingUp, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useTaskStore } from '../store/useTaskStore';
@@ -16,20 +16,29 @@ export const Dashboard: React.FC = () => {
   })));
   const { onNewProject } = useOutletContext<{ onNewProject: () => void }>();
 
-  const stats = [
-    { label: 'Total Tasks', value: tasks.length, icon: <TrendingUp size={20} />, color: 'text-primary', bg: 'bg-primary-light dark:bg-primary/20' },
-    { label: 'Due Today', value: tasks.filter(t => t.dueDate === format(new Date(), 'yyyy-MM-dd')).length, icon: <Clock size={20} />, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
-    { label: 'Overdue', value: tasks.filter(t => {
-      const project = projects.find(p => p.id === t.projectId);
-      const doneStatus = project?.columns[project.columns.length - 1] || 'Done';
-      return t.dueDate && new Date(t.dueDate) < new Date() && t.status !== doneStatus;
-    }).length, icon: <AlertCircle size={20} />, color: 'text-priority-high dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-    { label: 'Completed', value: tasks.filter(t => {
-      const project = projects.find(p => p.id === t.projectId);
-      const doneStatus = project?.columns[project.columns.length - 1] || 'Done';
-      return t.status === doneStatus;
-    }).length, icon: <CheckCircle2 size={20} />, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-  ];
+  const stats = useMemo(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const now = new Date();
+    const doneMap = new Map(projects.map(p => [p.id, p.columns[p.columns.length - 1] || 'Done']));
+
+    let dueToday = 0, overdue = 0, completed = 0;
+    for (const t of tasks) {
+      const doneStatus = doneMap.get(t.projectId);
+      if (t.status === doneStatus) { completed++; continue; }
+      if (t.dueDate) {
+        const dueDateStr = t.dueDate.slice(0, 10);
+        if (dueDateStr === today) dueToday++;
+        if (new Date(t.dueDate) < now) overdue++;
+      }
+    }
+
+    return [
+      { label: 'Total Tasks', value: tasks.length, icon: <TrendingUp size={20} />, color: 'text-primary', bg: 'bg-primary-light dark:bg-primary/20' },
+      { label: 'Due Today', value: dueToday, icon: <Clock size={20} />, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+      { label: 'Overdue', value: overdue, icon: <AlertCircle size={20} />, color: 'text-priority-high dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+      { label: 'Completed', value: completed, icon: <CheckCircle2 size={20} />, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
+    ];
+  }, [tasks, projects]);
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
