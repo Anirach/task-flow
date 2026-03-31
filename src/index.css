@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Arial", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-surface: var(--surface);
+  --color-background: var(--background);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border: var(--border);
+
+  --color-priority-high: #C62828;
+  --color-priority-medium: #E65100;
+  --color-priority-low: #2E7D32;
+
+  --color-status-todo: #546E7A;
+  --color-status-progress: #1A73E8;
+  --color-status-review: #6A1B9A;
+  --color-status-done: #2E7D32;
+}
+
+:root {
+  --primary: #1A73E8;
+  --primary-dark: #0D47A1;
+  --primary-light: #E8F0FE;
+  --surface: #FFFFFF;
+  --background: #F5F7FA;
+  --text-primary: #1A1A2E;
+  --text-secondary: #546E7A;
+  --border: #CFD8DC;
+}
+
+.dark {
+  --primary: #4285F4;
+  --primary-dark: #1A73E8;
+  --primary-light: #1E293B;
+  --surface: #1E293B;
+  --background: #0F172A;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --border: #334155;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary font-sans antialiased transition-colors duration-200;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-lg shadow-sm transition-all hover:shadow-md;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded-md font-semibold hover:bg-primary-dark transition-colors disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-600;
+  }
+
+  .btn-secondary {
+    @apply bg-surface text-primary border border-primary px-4 py-2 rounded-md font-semibold hover:bg-primary-light transition-colors;
+  }
+
+  .badge {
+    @apply px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider;
+  }
+}
+
+/* Custom scrollbar for Kanban */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full hover:bg-text-secondary/30;
+}

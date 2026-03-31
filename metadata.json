@@ -1,0 +1,5 @@
+{
+  "name": "TaskFlow",
+  "description": "A frontend-first task management application for teams to organize and track work using kanban or list interfaces.",
+  "requestFramePermissions": []
+}
