@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar, User, Tag, MessageSquare, Send, Clock, Trash2 } from 'lucide-react';
 import { Task, Status, Priority } from '../../types';
@@ -18,17 +18,24 @@ interface TaskDetailPanelProps {
 import { useShallow } from 'zustand/react/shallow';
 
 export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({ task, isOpen, onClose }) => {
-  const { users, comments, addComment, deleteTask, updateTask, projects, currentUser } = useTaskStore(useShallow(state => ({
+  const { users, comments, addComment, deleteTask, updateTask, fetchComments, projects, currentUser } = useTaskStore(useShallow(state => ({
     users: state.users,
     comments: state.comments,
     addComment: state.addComment,
     deleteTask: state.deleteTask,
     updateTask: state.updateTask,
+    fetchComments: state.fetchComments,
     projects: state.projects,
     currentUser: state.currentUser
   })));
   const [commentText, setCommentText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (task && isOpen) {
+      fetchComments(task.id);
+    }
+  }, [task?.id, isOpen]);
 
   if (!task) return null;
 

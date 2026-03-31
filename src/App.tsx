@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Landing } from './pages/Landing';
@@ -11,6 +12,20 @@ import { useTaskStore } from './store/useTaskStore';
 
 export default function App() {
   const isAuthenticated = useTaskStore((state) => state.isAuthenticated);
+  const restoreSession = useTaskStore((state) => state.restoreSession);
+  const [isRestoring, setIsRestoring] = useState(true);
+
+  useEffect(() => {
+    restoreSession().finally(() => setIsRestoring(false));
+  }, []);
+
+  if (isRestoring) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
