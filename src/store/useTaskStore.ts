@@ -9,8 +9,11 @@ interface TaskState {
   comments: Comment[];
   notifications: Notification[];
   currentUser: User;
+  isAuthenticated: boolean;
   
   // Actions
+  login: (email: string) => void;
+  logout: () => void;
   addProject: (project: Omit<Project, 'id' | 'createdAt' | 'taskCount' | 'completedCount' | 'columns'>) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
   deleteProject: (id: string) => void;
@@ -31,6 +34,14 @@ export const useTaskStore = create<TaskState>((set) => ({
   comments: mockComments,
   notifications: mockNotifications,
   currentUser: mockUsers[0], // Default to Anirach M.
+  isAuthenticated: false,
+
+  login: (email) => set((state) => {
+    const user = state.users.find(u => u.email === email) || state.users[0];
+    return { currentUser: user, isAuthenticated: true };
+  }),
+
+  logout: () => set({ isAuthenticated: false }),
 
   addProject: (project) => set((state) => {
     const newProject: Project = {

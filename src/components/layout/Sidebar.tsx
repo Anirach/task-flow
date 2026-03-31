@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, Settings, Plus, ChevronRight, Menu, X } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Settings, Plus, ChevronRight, Menu, X, LogOut } from 'lucide-react';
 import { useTaskStore } from '../../store/useTaskStore';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, onNewProject }) => {
-  const { projects, currentUser } = useTaskStore();
+  const { projects, currentUser, logout } = useTaskStore();
 
   return (
     <aside
@@ -107,13 +107,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed, o
           <Settings size={20} className="text-text-secondary" />
           {!isCollapsed && <span className="text-text-secondary text-sm">Settings</span>}
         </div>
-        <div className={cn('flex items-center gap-3 p-2 mt-1 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer', isCollapsed && 'justify-center')}>
+        <div className={cn('flex items-center gap-3 p-2 mt-1 rounded-md group hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer', isCollapsed && 'justify-center')}>
           <img src={currentUser.avatar} alt={currentUser.name} className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
           {!isCollapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold truncate">{currentUser.name}</p>
-              <p className="text-[10px] text-text-secondary truncate">{currentUser.role}</p>
-            </div>
+            <>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold truncate">{currentUser.name}</p>
+                <p className="text-[10px] text-text-secondary truncate">{currentUser.role}</p>
+              </div>
+              <button 
+                onClick={logout}
+                className="p-1.5 text-text-secondary hover:text-primary hover:bg-primary-light dark:hover:bg-primary/20 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                title="Logout"
+              >
+                <LogOut size={14} />
+              </button>
+            </>
           )}
         </div>
       </div>
